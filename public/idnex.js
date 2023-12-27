@@ -137,14 +137,15 @@ const loadFaceParts = () => {
   partsUrls.forEach((part, index) => loadParts(part, index === 0 ? 3 : 0.02))
 }
 
-
-
-const init = () => {
+/** 空間を初期化 */
+const initScene = () => {
   container = document.createElement("div");
   document.body.appendChild(container);
 
+  // 空間を作成
   scene = new THREE.Scene();
 
+  // カメラを設定
   camera = new THREE.PerspectiveCamera(
     50,
     window.innerWidth / window.innerHeight,
@@ -153,19 +154,25 @@ const init = () => {
   );
   camera.position.set(0, 0, 3);
 
+  // カメラ範囲を設定
   const controls = new OrbitControls(camera, container);
   controls.minDistance = 0;
   controls.maxDistance = 8;
 
+  // 真上に光源を設定
   scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
 
+  // 特定の方向に向いた光を設定
   const light = new THREE.DirectionalLight(0xffffff);
   light.position.set(0, 6, 0);
   scene.add(light);
 
+  // 入れ子構造を作成
+  // 入れ子構造として設計することで、複数の3Dオブジェクトをまとめて移動させたり、回転させたりするのが便利になる
   group = new THREE.Group();
   scene.add(group);
 
+  // 3Dモデルを画面に表示するためのレンダラー
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -174,12 +181,10 @@ const init = () => {
   container.appendChild(renderer.domElement);
 
   document.body.appendChild(ARButton.createButton(renderer));
+}
 
-  // 顔のパーツを表示
-  loadFaceParts()
-
-  // controllers
-
+/** コントローラーを設定 */
+const setControllers = () => {
   controller1 = renderer.xr.getController(0);
   controller1.addEventListener("selectstart", onSelectStart);
   controller1.addEventListener("selectend", onSelectEnd);
@@ -190,9 +195,7 @@ const init = () => {
   controller2.addEventListener("selectend", onSelectEnd);
   scene.add(controller2);
 
-  raycaster = new THREE.Raycaster();
-
-  // line
+  // コントローラーの向きにラインを表示
   const makeLine = (len) => {
     const material = new THREE.LineBasicMaterial({
       //color: 0xff0000, // red
@@ -208,10 +211,25 @@ const init = () => {
   };
   controller1.add(makeLine(5));
   controller2.add(makeLine(5));
+}
 
-  //
-  window.addEventListener("resize", onWindowResize);
+/** 初期化処理 */
+const init = () => {
+  // 空間を初期化
+  initScene()
+
+  // 顔のパーツを表示
+  loadFaceParts()
+
+  // コントローラーを設定
+  setControllers()
+
+  // レイキャスティング
+  // マウスピッキング（マウスが3D空間のどのオブジェクトの上にあるかを調べること）などに使わる。
+  raycaster = new THREE.Raycaster();
 };
 
 init();
 animate();
+
+window.addEventListener("resize", onWindowResize);
