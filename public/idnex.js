@@ -1,15 +1,12 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"; // for PC
 import { ARButton } from "three/addons/webxr/ARButton.js";
-import { createMegane } from "https://code4fukui.github.io/ar-meganefes/createMegane.js";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const param = new URL(location.href).searchParams;
-const grayscale = param.get("grayscale") || false;
 const monocolor = param.get("monocolor") || undefined;
 const opacity = parseFloat(param.get("opacity")) || 0.8;
 const geometry = param.get("geometry") || "blocks"; // or jig, megane
-const nset = param.get("nset") || 5;
 const snap = param.get("snap") || 0;
 console.log(param, opacity, geometry, monocolor);
 
@@ -187,183 +184,6 @@ const init = () => {
 
   group = new THREE.Group();
   scene.add(group);
-
-  const getGeometries = () => {
-    if (geometry == "jig") {
-      const w = 0.15;
-      const extrudeSettings = {
-        steps: 1,
-        depth: w,
-        bevelEnabled: false,
-        /*
-				bevelThickness: 1,
-				bevelSize: 1,
-				bevelOffset: 0,
-				bevelSegments: 1
-				*/
-      };
-      const dot = new THREE.ExtrudeGeometry(
-        (() => {
-          const s = new THREE.Shape();
-          s.moveTo(0, 0);
-          s.lineTo(w, 0);
-          s.lineTo(w, w);
-          s.lineTo(0, w);
-          s.lineTo(0, 0);
-          return s;
-        })(),
-        extrudeSettings,
-      );
-      const i = new THREE.ExtrudeGeometry(
-        (() => {
-          const s = new THREE.Shape();
-          s.moveTo(0, 0);
-          s.lineTo(w, 0);
-          s.lineTo(w, w * 3);
-          s.lineTo(0, w * 3);
-          s.lineTo(0, 0);
-          return s;
-        })(),
-        extrudeSettings,
-      );
-      const j = new THREE.ExtrudeGeometry(
-        (() => {
-          const s = new THREE.Shape();
-          s.moveTo(0, 0);
-          s.lineTo(w, 0);
-          s.lineTo(w, w * 5);
-          s.lineTo(-w, w * 5);
-          s.lineTo(-w, w * 4);
-          s.lineTo(0, w * 4);
-          s.lineTo(0, 0);
-          return s;
-        })(),
-        extrudeSettings,
-      );
-      const g = new THREE.ExtrudeGeometry(
-        (() => {
-          const s = new THREE.Shape();
-          s.moveTo(0, 0);
-          s.lineTo(w * 4, 0);
-          s.lineTo(w * 4, w);
-          s.lineTo(w * 3, w);
-          s.lineTo(w * 3, w * 5);
-          s.lineTo(0, w * 5);
-          s.lineTo(0, w * 4);
-          s.lineTo(w * 2, w * 4);
-          s.lineTo(w * 2, w * 3);
-          s.lineTo(0, w * 3);
-          s.lineTo(0, 0);
-          s.moveTo(w, w);
-          s.lineTo(w, w * 2);
-          s.lineTo(w * 2, w * 2);
-          s.lineTo(w * 2, w);
-          s.lineTo(w, w);
-          return s;
-        })(),
-        extrudeSettings,
-      );
-      const p = new THREE.ExtrudeGeometry(
-        (() => {
-          const s = new THREE.Shape();
-          s.moveTo(0, 0);
-          s.lineTo(w * 3, 0);
-          s.lineTo(w * 3, w * 3);
-          s.lineTo(w, w * 3);
-          s.lineTo(w, w * 5);
-          s.lineTo(0, w * 5);
-          s.lineTo(0, 0);
-          s.moveTo(w, w);
-          s.lineTo(w, w * 2);
-          s.lineTo(w * 2, w * 2);
-          s.lineTo(w * 2, w);
-          s.lineTo(w, w);
-          return s;
-        })(),
-        extrudeSettings,
-      );
-
-      return [
-        j,
-        dot,
-        i,
-        dot,
-        g,
-        dot,
-        j,
-        dot,
-        p,
-      ];
-    } else {
-      return [
-        new THREE.BoxGeometry(1.6, 0.8, 0.1),
-        new THREE.BoxGeometry(0.2, 0.2, 0.2),
-        new THREE.BoxGeometry(0.2, 0.4, 0.2),
-        new THREE.BoxGeometry(0.4, 0.4, 0.1),
-        new THREE.ConeGeometry(0.1, 0.2, 64),
-        new THREE.CylinderGeometry(0.1, 0.1, 0.2, 64),
-        new THREE.CylinderGeometry(0.1, 0.1, 0.8, 64),
-        new THREE.IcosahedronGeometry(0.1, 8),
-        new THREE.TorusGeometry(0.2 - 0.04, 0.04, 64, 32),
-      ];
-    }
-  };
-  const getObjects = () => {
-    if (geometry == "megane") {
-      const res = [];
-      console.log(nset);
-      for (let i = 0; i < nset; i++) {
-        res[i] = createMegane();
-      }
-      return res;
-    }
-    const geometries = getGeometries();
-    const ngeo = geometries.length * nset;
-    const res = [];
-    for (let i = 0; i < ngeo; i++) {
-      //const geometry = geometries[Math.floor(Math.random() * geometries.length)];
-      const geometry = geometries[i % geometries.length];
-      const getColor = () => {
-        if (monocolor !== undefined) {
-          return parseInt(monocolor, 16);
-        }
-        if (grayscale) {
-          const nc = (Math.random() * 0x100) >> 0;
-          const color = (nc << 16) | (nc << 8) | nc;
-          return color;
-        }
-        return Math.random() * 0x1000000;
-      };
-      const material = new THREE.MeshStandardMaterial({
-        color: getColor(),
-        roughness: 1.0,
-        metalness: 0.0,
-        transparent: opacity < 1.0,
-        opacity,
-      });
-
-      const object = new THREE.Mesh(geometry, material);
-      res.push(object);
-    }
-    return res;
-  };
-
-  const objs = getObjects();
-  for (const object of objs) {
-    object.position.x = Math.random() * 4 - 2;
-    object.position.y = Math.random() * 4 - 2;
-    object.position.z = Math.random() * 4 - 2;
-
-    object.rotation.x = Math.random() * 2 * Math.PI;
-    object.rotation.y = Math.random() * 2 * Math.PI;
-    object.rotation.z = Math.random() * 2 * Math.PI;
-
-    //object.scale.setScalar(Math.random() / 2 + 0.5);
-
-    group.add(object);
-  }
-
-  //
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
