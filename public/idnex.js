@@ -126,6 +126,41 @@ loader.load( './fujisan.glb', gltf => {
 
 }, undefined, err => {});
 
+loader.load( './mouth.glb', gltf => {
+
+  // サイズ調整
+	gltf.scene.scale.set(0.01, 0.01, 0.01); 
+  const root = gltf.scene;
+  scene.add(root);
+
+}, undefined, err => {});
+
+loader.load( './nose.glb', gltf => {
+
+  // サイズ調整
+	gltf.scene.scale.set(0.01, 0.01, 0.01); 
+  const root = gltf.scene;
+  scene.add(root);
+}, undefined, () => {});
+
+loader.load( './right-eye.glb', gltf => {
+
+  // サイズ調整
+	gltf.scene.scale.set(0.01, 0.01, 0.01); 
+  const root = gltf.scene;
+  scene.add(root);
+
+}, undefined, () => {});
+
+loader.load( './left-eye.glb', gltf => {
+
+  // サイズ調整
+	gltf.scene.scale.set(0.01, 0.01, 0.01); 
+  const root = gltf.scene;
+  scene.add(root);
+
+}, undefined, () => {});
+
 const init = () => {
   container = document.createElement("div");
   document.body.appendChild(container);
