@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"; // for PC
 import { ARButton } from "three/addons/webxr/ARButton.js";
 import { createMegane } from "https://code4fukui.github.io/ar-meganefes/createMegane.js";
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const param = new URL(location.href).searchParams;
 const grayscale = param.get("grayscale") || false;
@@ -116,6 +117,14 @@ const render = () => {
 const animate = () => {
   renderer.setAnimationLoop(render);
 };
+
+const loader = new GLTFLoader();
+
+loader.load( './fujisan.glb', gltf => {
+
+	scene.add( gltf.scene );
+
+}, undefined, err => {});
 
 const init = () => {
   container = document.createElement("div");
