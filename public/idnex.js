@@ -111,55 +111,33 @@ const render = () => {
   intersectObjects(controller2);
   renderer.render(scene, camera);
 };
+
 const animate = () => {
   renderer.setAnimationLoop(render);
 };
 
-const loader = new GLTFLoader();
+/** 顔のパーツを表示 */
+const loadFaceParts = () => {
+  /** GLTFファイルローダー */
+  const loader = new GLTFLoader();
 
-loader.load( './fujisan.glb', gltf => {
+  /** 各パーツのURL */
+  const partsUrls = ['./fujisan.glb', './mouth.glb', './nose.glb', './right-eye.glb', './left-eye.glb']
 
-  // サイズ調整
-	gltf.scene.scale.set(3, 3, 3); 
-  const root = gltf.scene;
-  scene.add(root);
+  const loadParts = (url, scale) => {
+    loader.load(url, gltf => {
+      // サイズ調整
+      gltf.scene.scale.set(scale, scale, scale);
+      // 画面に表示
+      scene.add(gltf.scene);
+    
+    }, undefined, () => {});
+  }
 
-}, undefined, err => {});
+  partsUrls.forEach((part, index) => loadParts(part, index === 0 ? 3 : 0.02))
+}
 
-loader.load( './mouth.glb', gltf => {
 
-  // サイズ調整
-	gltf.scene.scale.set(0.02, 0.02, 0.02); 
-  const root = gltf.scene;
-  scene.add(root);
-
-}, undefined, err => {});
-
-loader.load( './nose.glb', gltf => {
-
-  // サイズ調整
-	gltf.scene.scale.set(0.02, 0.02, 0.02); 
-  const root = gltf.scene;
-  scene.add(root);
-}, undefined, () => {});
-
-loader.load( './right-eye.glb', gltf => {
-
-  // サイズ調整
-	gltf.scene.scale.set(0.02, 0.02, 0.02); 
-  const root = gltf.scene;
-  scene.add(root);
-
-}, undefined, () => {});
-
-loader.load( './left-eye.glb', gltf => {
-
-  // サイズ調整
-	gltf.scene.scale.set(0.02, 0.02, 0.02); 
-  const root = gltf.scene;
-  scene.add(root);
-
-}, undefined, () => {});
 
 const init = () => {
   container = document.createElement("div");
@@ -196,6 +174,9 @@ const init = () => {
   container.appendChild(renderer.domElement);
 
   document.body.appendChild(ARButton.createButton(renderer));
+
+  // 顔のパーツを表示
+  loadFaceParts()
 
   // controllers
 
