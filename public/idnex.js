@@ -3,35 +3,29 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js"; // for P
 import { ARButton } from "three/addons/webxr/ARButton.js";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-const param = new URL(location.href).searchParams;
-const monocolor = param.get("monocolor") || undefined;
-const opacity = parseFloat(param.get("opacity")) || 0.8;
-const geometry = param.get("geometry") || "blocks"; // or jig, megane
-const snap = param.get("snap") || 0;
-console.log(param, opacity, geometry, monocolor);
-
-let container;
 let camera, scene, renderer;
 let controller1, controller2;
-
 let raycaster;
+let group;
 
+/** 光線と交差しているオブジェクト */
 const intersected = [];
 const tempMatrix = new THREE.Matrix4();
 
-let group;
-
+// ウィンドウサイズを変えた時の処理
 const onWindowResize = () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 };
 
+/** 光線の原点から交差点までの距離 (触っているかどうか) */
 const isTouch = (intersection) => {
   const d = intersection.distance;
   return d > 0 && d < .10;
 };
 
+/** トリガーを引いた時 */
 const onSelectStart = (event) => {
   const controller = event.target;
   const intersections = getIntersections(controller);
@@ -39,45 +33,54 @@ const onSelectStart = (event) => {
   for (const intersection of intersections) {
     const object = intersection.object;
     object.material.emissive.b = 1;
+    // コントローラーに付与 (付随してふごかすようにする)
     controller.attach(object);
     objects.push(object);
     if (isTouch(intersection)) {
       break;
     }
   }
+  // 選択状態のオブジェクトとして登録する
   controller.userData.selected = objects;
 };
 
+/** トリガーを話した時 */
 const onSelectEnd = (event) => {
   const controller = event.target;
   if (controller.userData.selected !== undefined) {
+    // 選択状態となっていたオブジェクトに対して
     for (const object of controller.userData.selected) {
       object.material.emissive.b = 0;
+      // attachでは内部的にaddを呼び出している2ためaddをする必要はありません。
+      // 空間に再配置する
       group.attach(object);
-      if (snap) {
-        object.position.x = Math.floor((object.position.x + snap / 2) / snap) *
-          snap;
-        object.position.y = Math.floor((object.position.y + snap / 2) / snap) *
-          snap;
-        object.position.z = Math.floor((object.position.z + snap / 2) / snap) *
-          snap;
-        const dsnap = Math.PI / 2;
-        object.rotation.x =
-          Math.floor((object.rotation.x + dsnap / 2) / dsnap) * dsnap;
-        object.rotation.y =
-          Math.floor((object.rotation.y + dsnap / 2) / dsnap) * dsnap;
-        object.rotation.z =
-          Math.floor((object.rotation.z + dsnap / 2) / dsnap) * dsnap;
-      }
+      // if (snap) {
+      //   object.position.x = Math.floor((object.position.x + snap / 2) / snap) *
+      //     snap;
+      //   object.position.y = Math.floor((object.position.y + snap / 2) / snap) *
+      //     snap;
+      //   object.position.z = Math.floor((object.position.z + snap / 2) / snap) *
+      //     snap;
+      //   const dsnap = Math.PI / 2;
+      //   object.rotation.x =
+      //     Math.floor((object.rotation.x + dsnap / 2) / dsnap) * dsnap;
+      //   object.rotation.y =
+      //     Math.floor((object.rotation.y + dsnap / 2) / dsnap) * dsnap;
+      //   object.rotation.z =
+      //     Math.floor((object.rotation.z + dsnap / 2) / dsnap) * dsnap;
+      // }
     }
+    // 選択状態のオブジェクトを解除
     controller.userData.selected = undefined;
   }
 };
 
+/** 光線とぶつかったオブジェクトを得る */
 const getIntersections = (controller) => {
   tempMatrix.identity().extractRotation(controller.matrixWorld);
   raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
   raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+  // 光線とぶつかったオブジェクトを得る
   return raycaster.intersectObjects(group.children, false);
 };
 
@@ -85,11 +88,13 @@ const intersectObjects = (controller) => {
   // Do not highlight when already selected
   if (controller.userData.selected !== undefined) return;
 
+  // 光線とぶつかったオブジェクトをに対して処理
   const intersections = getIntersections(controller);
   for (const intersection of intersections) {
     const object = intersection.object;
     object.material.emissive.r = 1;
     intersected.push(object);
+    // 触っていたら
     if (isTouch(intersection)) {
       object.material.emissive.g = 1;
       break;
@@ -97,6 +102,7 @@ const intersectObjects = (controller) => {
   }
 };
 
+/** 光線とぶつかっているオブジェクトをリセット */
 const cleanIntersected = () => {
   while (intersected.length) {
     const object = intersected.pop();
@@ -105,6 +111,7 @@ const cleanIntersected = () => {
   }
 };
 
+/** 描画処理 */
 const render = () => {
   cleanIntersected();
   intersectObjects(controller1);
@@ -112,6 +119,7 @@ const render = () => {
   renderer.render(scene, camera);
 };
 
+/** レンダリングを開始する */
 const animate = () => {
   renderer.setAnimationLoop(render);
 };
@@ -139,7 +147,7 @@ const loadFaceParts = () => {
 
 /** 空間を初期化 */
 const initScene = () => {
-  container = document.createElement("div");
+  const container = document.createElement("div");
   document.body.appendChild(container);
 
   // 空間を作成
